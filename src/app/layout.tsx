@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist_Mono, Noto_Sans } from "next/font/google"
 
+import { ThemeProvider } from "@/components/theme-provider"
 import { TRPCReactProvider } from "@/lib/api/client"
 import { cn } from "@/lib/utils"
 
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body
         className={cn("antialiased", notoSans.variable, geistMono.variable)}
       >
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </TRPCReactProvider>
       </body>
     </html>
   )
