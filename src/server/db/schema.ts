@@ -1,20 +1,87 @@
-import { sql } from "drizzle-orm"
-import { index, pgTableCreator } from "drizzle-orm/pg-core"
+import { relations, sql } from "drizzle-orm"
+import { index, pgEnum, pgTableCreator } from "drizzle-orm/pg-core"
 
 export const createTable = pgTableCreator((name) => `trdb_${name}`)
 
-export const post = createTable(
-  "post",
+export const recipeDifficulty = pgEnum("recipe_difficulty", [
+  "easy",
+  "medium",
+  "hard",
+])
+
+export const recipeTable = createTable(
+  "recipe",
   (d) => ({
+    cookTime: d.integer("cook_time"),
     createdAt: d
-      .timestamp({ withTimezone: true })
+      .timestamp("created_at", { mode: "date", withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 255 }).notNull(),
-    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+    difficulty: recipeDifficulty("difficulty"),
+    id: d.serial("id").primaryKey(),
+    ingredients: d.text("ingredients").notNull(),
+    instructions: d.text("instructions").notNull(),
+    lastMadeAt: d.timestamp("last_made_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    notes: d.text("notes"),
+    prepTime: d.integer("prep_time"),
+    rating: d.integer("rating"),
+    servings: d.integer("servings"),
+    slug: d.text("slug").notNull().unique(),
+    source: d.text("source"),
+    title: d.text("title").notNull(),
+    updatedAt: d
+      .timestamp("updated_at", { mode: "date", withTimezone: true })
+      .$onUpdate(() => new Date()),
+    userId: d
+      .text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
   }),
-  (t) => [index("post_name_idx").on(t.name)],
+  (t) => [
+    index("recipe_userId_idx").on(t.userId),
+    index("recipe_slug_idx").on(t.slug),
+    index("recipe_title_idx").on(t.title),
+    index("recipe_createdAt_idx").on(t.createdAt),
+  ],
+)
+
+export type Recipe = typeof recipeTable.$inferSelect
+export type RecipeInsert = typeof recipeTable.$inferInsert
+
+export const tagsTable = createTable("tag", (d) => ({
+  createdAt: d
+    .timestamp("created_at", { mode: "date", withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  id: d.serial("id").primaryKey(),
+  name: d.text("name").notNull().unique(),
+  slug: d.text("slug").notNull().unique(),
+}))
+
+export const recipeTagsTable = createTable(
+  "recipe_tags",
+  (d) => ({
+    createdAt: d
+      .timestamp("created_at", { mode: "date", withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    id: d.serial("id").primaryKey(),
+    recipeId: d
+      .integer("recipe_id")
+      .notNull()
+      .references(() => recipeTable.id, { onDelete: "cascade" }),
+    tagId: d
+      .integer("tag_id")
+      .notNull()
+      .references(() => tagsTable.id, { onDelete: "cascade" }),
+  }),
+  (t) => [
+    index("recipe_tags_recipeId_idx").on(t.recipeId),
+    index("recipe_tags_tagId_idx").on(t.tagId),
+  ],
 )
 
 export const user = createTable(
@@ -102,3 +169,46 @@ export const verification = createTable(
   }),
   (t) => [index("verification_identifier_idx").on(t.identifier)],
 )
+
+export const userRelations = relations(user, ({ many }) => ({
+  accounts: many(account),
+  recipes: many(recipeTable),
+  sessions: many(session),
+}))
+
+export const recipeRelations = relations(recipeTable, ({ one, many }) => ({
+  tags: many(recipeTagsTable),
+  user: one(user, {
+    fields: [recipeTable.userId],
+    references: [user.id],
+  }),
+}))
+
+export const tagRelations = relations(tagsTable, ({ many }) => ({
+  recipes: many(recipeTagsTable),
+}))
+
+export const recipeTagsRelations = relations(recipeTagsTable, ({ one }) => ({
+  recipe: one(recipeTable, {
+    fields: [recipeTagsTable.recipeId],
+    references: [recipeTable.id],
+  }),
+  tag: one(tagsTable, {
+    fields: [recipeTagsTable.tagId],
+    references: [tagsTable.id],
+  }),
+}))
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}))
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}))
