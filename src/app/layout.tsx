@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist_Mono, Noto_Sans } from "next/font/google"
 
 import { TRPCReactProvider } from "@/lib/api/client"
+import { cn } from "@/lib/utils"
 
 import "@/styles/globals.css"
 
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${notoSans.variable} ${geistMono.variable} antialiased`}
+        className={cn("antialiased", notoSans.variable, geistMono.variable)}
       >
         <TRPCReactProvider>{children}</TRPCReactProvider>
       </body>

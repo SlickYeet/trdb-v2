@@ -3,12 +3,16 @@
     "initVersion": "0.12.0"
   },
   "dependencies": {
+    "@base-ui/react": "^1.2.0",
     "@t3-oss/env-nextjs": "^0.13.8",
+    "@tabler/icons-react": "^3.36.1",
     "@tanstack/react-query": "^5.90.10",
     "@trpc/client": "^11.7.2",
     "@trpc/react-query": "^11.7.2",
     "@trpc/server": "^11.7.2",
     "better-auth": "^1.4.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.0",
     "next": "^16.0.8",
     "postgres": "^3.4.7",
@@ -16,6 +20,7 @@
     "react-dom": "^19.2.1",
     "server-only": "^0.0.1",
     "superjson": "^2.2.5",
+    "tailwind-merge": "^3.5.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -25,14 +30,16 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "drizzle-kit": "^0.31.8",
+    "shadcn": "^3.8.5",
     "tailwindcss": "^4.0.17",
+    "tw-animate-css": "^1.4.0",
     "typescript": "^5.9.3"
   },
   "name": "trdb_v2",
   "private": true,
   "scripts": {
     "auth:generate": "npx @better-auth/cli@latest generate --config ./src/server/auth/index.ts --yes",
-    "build": "next build",
+    "build": "bun db:migrate && next build",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -40,8 +47,9 @@
     "dev": "next dev",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "lint:unsafe": "biome check --write --unsafe .",
+    "lint:unsafe": "biomecheck --write --unsafe .",
     "lint:write": "biome check --write .",
+    "shadcn": "bunx --bun shadcn@latest",
     "start": "next start"
   },
   "type": "module",
